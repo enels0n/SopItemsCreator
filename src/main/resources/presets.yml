@@ -1,0 +1,6 @@
+example:
+  material: STONE
+  name: Example
+  lore:
+    - "&aTest lore"
+    - "&cTest lore"
