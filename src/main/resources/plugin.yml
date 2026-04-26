@@ -1,8 +1,14 @@
 name: ${project.name}
-main: ${project.groupId}.${project.name}
+main: net.enelson.sopitemscreator.SopItemsCreator
 version: ${project.version}
 authors: [E_NeLsOn]
-depend: [PlaceholderAPI,NBTAPI]
+depend: [NBTAPI]
 api-version: 1.16
 commands:
-  aitemscreator:
+  sopitemscreator:
+    aliases: [aitemscreator]
+permissions:
+  sopitemscreator.admin:
+    default: op
+  aitemscreator.admin:
+    default: op
