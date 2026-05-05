@@ -6,9 +6,6 @@ depend: [NBTAPI]
 api-version: 1.16
 commands:
   sopitemscreator:
-    aliases: [aitemscreator]
 permissions:
   sopitemscreator.admin:
-    default: op
-  aitemscreator.admin:
     default: op

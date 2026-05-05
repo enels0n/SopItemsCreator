@@ -8,7 +8,7 @@ import org.bukkit.inventory.ItemStack;
 
 public final class GiveCommand {
     public GiveCommand(CommandSender sender, String label, String[] args) {
-        if (!sender.hasPermission("sopitemscreator.admin") && !sender.hasPermission("aitemscreator.admin")) {
+        if (!sender.hasPermission("sopitemscreator.admin")) {
             sender.sendMessage("You do not have permission.");
             return;
         }

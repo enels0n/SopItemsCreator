@@ -57,7 +57,7 @@ public final class CommandManager implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         List<String> completions = new ArrayList<String>();
-        if (!sender.hasPermission(ADMIN_PERMISSION) && !sender.hasPermission("aitemscreator.admin")) {
+        if (!sender.hasPermission(ADMIN_PERMISSION)) {
             return completions;
         }
 

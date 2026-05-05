@@ -5,7 +5,7 @@ import org.bukkit.command.CommandSender;
 
 public final class ReloadCommand {
     public ReloadCommand(CommandSender sender) {
-        if (!sender.hasPermission("sopitemscreator.admin") && !sender.hasPermission("aitemscreator.admin")) {
+        if (!sender.hasPermission("sopitemscreator.admin")) {
             sender.sendMessage("You do not have permission.");
             return;
         }

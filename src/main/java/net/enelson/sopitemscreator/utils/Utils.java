@@ -2,10 +2,10 @@ package net.enelson.sopitemscreator.utils;
 
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteNBT;
+import java.lang.reflect.Field;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import net.enelson.sopitemscreator.SopItemsCreator;
@@ -14,7 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.CustomModelDataComponent;
+import org.bukkit.inventory.meta.SkullMeta;
 
 public final class Utils {
     private final SopItemsCreator plugin;
@@ -27,16 +27,17 @@ public final class Utils {
         reloadPresets();
     }
 
-    public ItemStack getItem(String material, Object model, String name, List<String> lore, List<String> nbt) {
+    public ItemStack getItem(String material, Object model, String name, java.util.List<String> lore, java.util.List<String> nbt) {
         ItemStack item = new ItemStack(Material.valueOf(material));
         item.setAmount(1);
 
         ItemMeta meta = item.getItemMeta();
         if (model != null) {
-            String value = String.valueOf(model);
-            CustomModelDataComponent cmd = meta.getCustomModelDataComponent();
-            cmd.setStrings(List.of(value));
-            meta.setCustomModelDataComponent(cmd);
+            try {
+                meta.setCustomModelData(Integer.parseInt(String.valueOf(model)));
+            } catch (NumberFormatException exception) {
+                this.plugin.getLogger().warning("Custom model data must be numeric for 1.16.5 compatibility: " + model);
+            }
         }
         if (name != null) {
             meta.setDisplayName(name);
@@ -63,13 +64,12 @@ public final class Utils {
 
     public ItemStack getHead(String value, String name) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-        NBT.modifyComponents(head, nbt -> {
-            ReadWriteNBT profileNbt = nbt.getOrCreateCompound("minecraft:profile");
-            profileNbt.setUUID("id", UUID.fromString("4fbecd49-c7d4-4c18-8410-adf7a7348728"));
-            ReadWriteNBT propertiesNbt = profileNbt.getCompoundList("properties").addCompound();
-            propertiesNbt.setString("name", "textures");
-            propertiesNbt.setString("value", value);
-        });
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        applyHeadTexture(meta, value);
+        if (name != null) {
+            meta.setDisplayName(name);
+        }
+        head.setItemMeta(meta);
         return head;
     }
 
@@ -102,15 +102,15 @@ public final class Utils {
         return this.presets.getConfigurationSection("").getKeys(false);
     }
 
-    private List<String> translateColorList(List<String> list) {
-        List<String> translated = new ArrayList<String>();
+    private java.util.List<String> translateColorList(java.util.List<String> list) {
+        java.util.List<String> translated = new ArrayList<String>();
         for (String line : list) {
             translated.add(ChatColor.translateAlternateColorCodes('&', line));
         }
         return translated;
     }
 
-    private void setTags(ItemStack item, List<String> tags) {
+    private void setTags(ItemStack item, java.util.List<String> tags) {
         NBT.modify(item, nbt -> {
             for (String tag : tags) {
                 String[] parts = tag.split("::", 2);
@@ -133,6 +133,27 @@ public final class Utils {
     private void checkFile() {
         if (!this.file.exists()) {
             this.plugin.saveResource("presets.yml", true);
+        }
+    }
+
+    private void applyHeadTexture(SkullMeta meta, String value) {
+        try {
+            Class<?> gameProfileClass = Class.forName("com.mojang.authlib.GameProfile");
+            Class<?> propertyClass = Class.forName("com.mojang.authlib.properties.Property");
+            Object profile = gameProfileClass
+                .getConstructor(UUID.class, String.class)
+                .newInstance(UUID.fromString("4fbecd49-c7d4-4c18-8410-adf7a7348728"), null);
+
+            Object properties = gameProfileClass.getMethod("getProperties").invoke(profile);
+            properties.getClass()
+                .getMethod("put", Object.class, Object.class)
+                .invoke(properties, "textures", propertyClass.getConstructor(String.class, String.class).newInstance("textures", value));
+
+            Field profileField = meta.getClass().getDeclaredField("profile");
+            profileField.setAccessible(true);
+            profileField.set(meta, profile);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed to apply head texture.", exception);
         }
     }
 }
